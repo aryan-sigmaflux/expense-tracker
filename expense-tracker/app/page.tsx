@@ -7,7 +7,6 @@ import {
   CalendarDays,
   Pencil,
   Trash2,
-  Tag,
   SlidersHorizontal,
   Eye,
   EyeOff,
@@ -28,6 +27,8 @@ import {
 import {
   listCategories,
   colorFor,
+  iconFor,
+  iconComp,
   formatMoney,
   type Category,
 } from "@/lib/categories";
@@ -452,6 +453,7 @@ export default function Dashboard() {
               <ul className="flex flex-col gap-2">
                 {visibleExpenses.map((e) => {
                   const color = colorFor(e.category, categories);
+                  const Icon = iconFor(e.category, categories);
                   return (
                     <li
                       key={e.id}
@@ -461,7 +463,7 @@ export default function Dashboard() {
                         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px]"
                         style={{ backgroundColor: `${color}1A`, color }}
                       >
-                        <Tag size={18} />
+                        <Icon size={18} />
                       </span>
                       <div className="min-w-0 flex-1">
                         {e.notes ? (
@@ -514,7 +516,9 @@ export default function Dashboard() {
               </p>
             ) : (
               <ul className="flex flex-col gap-2">
-                {visibleCategories.map((c) => (
+                {visibleCategories.map((c) => {
+                  const Icon = iconComp(c.icon);
+                  return (
                   <li
                     key={c.id}
                     className="flex items-center gap-3 rounded-[20px] bg-white p-3 shadow-[var(--shadow-card)]"
@@ -523,7 +527,7 @@ export default function Dashboard() {
                       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px]"
                       style={{ backgroundColor: `${c.color}1A`, color: c.color }}
                     >
-                      <Tag size={18} />
+                      <Icon size={18} />
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-text-dark">
@@ -538,7 +542,8 @@ export default function Dashboard() {
                       {formatMoney(c.total)}
                     </span>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             ))}
         </section>

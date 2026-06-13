@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { X, Pencil, Check } from "lucide-react";
-import { updateCategory, type Category } from "@/lib/categories";
+import {
+  updateCategory,
+  iconComp,
+  CATEGORY_ICONS,
+  ICON_NAMES,
+  type Category,
+} from "@/lib/categories";
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
@@ -18,6 +24,7 @@ export default function EditCategoriesOverlay({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [color, setColor] = useState("#000000");
+  const [icon, setIcon] = useState("Tag");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -25,6 +32,7 @@ export default function EditCategoriesOverlay({
     setEditingId(c.id);
     setName(c.name);
     setColor(HEX_RE.test(c.color) ? c.color : "#5A5A6E");
+    setIcon(c.icon && CATEGORY_ICONS[c.icon] ? c.icon : "Tag");
     setError(null);
   }
 
@@ -45,7 +53,7 @@ export default function EditCategoriesOverlay({
     }
     setSaving(true);
     try {
-      await updateCategory(id, trimmed, color);
+      await updateCategory(id, trimmed, color, icon);
       await onChanged();
       setEditingId(null);
     } catch (err) {
@@ -137,6 +145,35 @@ export default function EditCategoriesOverlay({
                         />
                       </div>
 
+                      {/* Icon picker */}
+                      <div className="flex flex-col gap-2">
+                        <span className="text-sm font-medium text-text-muted">
+                          Icon
+                        </span>
+                        <div className="grid max-h-[148px] grid-cols-6 gap-2 overflow-y-auto rounded-[14px] bg-bg-light p-2">
+                          {ICON_NAMES.map((nm) => {
+                            const Ico = iconComp(nm);
+                            const sel = nm === icon;
+                            return (
+                              <button
+                                key={nm}
+                                type="button"
+                                onClick={() => setIcon(nm)}
+                                aria-label={nm}
+                                className="flex aspect-square items-center justify-center rounded-[12px] transition"
+                                style={
+                                  sel
+                                    ? { backgroundColor: color, color: "#fff" }
+                                    : { color: "#5A5A6E" }
+                                }
+                              >
+                                <Ico size={18} />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
                       {error && (
                         <p className="text-sm font-medium text-coral">{error}</p>
                       )}
@@ -161,10 +198,17 @@ export default function EditCategoriesOverlay({
                     </div>
                   ) : (
                     <div className="flex items-center gap-3">
-                      <span
-                        className="h-10 w-10 shrink-0 rounded-[14px]"
-                        style={{ backgroundColor: c.color }}
-                      />
+                      {(() => {
+                        const Ico = iconComp(c.icon);
+                        return (
+                          <span
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] text-white"
+                            style={{ backgroundColor: c.color }}
+                          >
+                            <Ico size={18} />
+                          </span>
+                        );
+                      })()}
                       <span className="min-w-0 flex-1 truncate text-base font-semibold text-text-dark">
                         {c.name}
                       </span>

@@ -1,7 +1,84 @@
+import {
+  Tag,
+  Utensils,
+  Coffee,
+  Pizza,
+  ShoppingBag,
+  ShoppingCart,
+  Car,
+  Bus,
+  Fuel,
+  Plane,
+  Home,
+  Lightbulb,
+  Wifi,
+  Smartphone,
+  ReceiptText,
+  CreditCard,
+  Gift,
+  Shirt,
+  HeartPulse,
+  Pill,
+  Dumbbell,
+  GraduationCap,
+  Book,
+  Clapperboard,
+  Music,
+  Gamepad2,
+  PawPrint,
+  Baby,
+  Wrench,
+  PiggyBank,
+  Banknote,
+  Briefcase,
+  type LucideIcon,
+} from "lucide-react";
 import { supabase } from "./supabaseClient";
 import { getSession } from "./auth";
 
 export const CURRENCY = "₹";
+
+// Curated, selectable icons. Stored on each category by their string key.
+export const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  Tag,
+  Utensils,
+  Coffee,
+  Pizza,
+  ShoppingBag,
+  ShoppingCart,
+  Car,
+  Bus,
+  Fuel,
+  Plane,
+  Home,
+  Lightbulb,
+  Wifi,
+  Smartphone,
+  ReceiptText,
+  CreditCard,
+  Gift,
+  Shirt,
+  HeartPulse,
+  Pill,
+  Dumbbell,
+  GraduationCap,
+  Book,
+  Clapperboard,
+  Music,
+  Gamepad2,
+  PawPrint,
+  Baby,
+  Wrench,
+  PiggyBank,
+  Banknote,
+  Briefcase,
+};
+
+export const ICON_NAMES = Object.keys(CATEGORY_ICONS);
+
+export function iconComp(iconName: string | undefined): LucideIcon {
+  return (iconName && CATEGORY_ICONS[iconName]) || Tag;
+}
 
 export function formatMoney(amount: number): string {
   return `${CURRENCY}${amount.toLocaleString("en-IN", {
@@ -32,6 +109,7 @@ export type Category = {
   id: string;
   name: string;
   color: string;
+  icon: string;
 };
 
 export function colorFor(name: string, categories: Category[]): string {
@@ -39,6 +117,13 @@ export function colorFor(name: string, categories: Category[]): string {
     categories.find((c) => c.name.toLowerCase() === name.toLowerCase())?.color ??
     "#5A5A6E"
   );
+}
+
+export function iconFor(name: string, categories: Category[]): LucideIcon {
+  const c = categories.find(
+    (cat) => cat.name.toLowerCase() === name.toLowerCase(),
+  );
+  return iconComp(c?.icon);
 }
 
 export async function listCategories(): Promise<Category[]> {
@@ -70,6 +155,7 @@ export async function updateCategory(
   id: string,
   name: string,
   color: string,
+  icon: string,
 ): Promise<Category> {
   const session = getSession();
   if (!session) throw new Error("Not signed in");
@@ -78,6 +164,7 @@ export async function updateCategory(
     p_id: id,
     p_name: name,
     p_color: color,
+    p_icon: icon,
   });
   if (error) throw new Error(error.message);
   return data as Category;
