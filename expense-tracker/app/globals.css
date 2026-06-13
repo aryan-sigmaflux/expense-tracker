@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* Design tokens from ui-design-spec.md, exposed to Tailwind v4 utilities. */
+@theme inline {
+  --font-sans: var(--font-primary);
+
+  --color-coral: #e8604c;
+  --color-teal: #2a7d6e;
+  --color-cream: #f5edd8;
+  --color-purple: #6c5ce7;
+  --color-orange: #f5a033;
+  --color-yellow: #ffd166;
+  --color-soft-pink: #fadadd;
+  --color-bg-light: #f9f7f4;
+  --color-text-dark: #1c1c2e;
+  --color-text-mid: #5a5a6e;
+  --color-text-muted: #a0a0b8;
+  --color-border: #ebebf0;
+
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-floating: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+html,
+body {
+  color: var(--color-text-dark);
+  font-family: var(--font-primary), "Plus Jakarta Sans", sans-serif;
+}
+
+/* Warm, playful backdrop: soft pink fading into cream. */
+body {
+  background: linear-gradient(180deg, #fceee9 0%, #f7f2e8 38%, #f7f2e8 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-in {
+  animation: fadeSlideUp 0.25s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
