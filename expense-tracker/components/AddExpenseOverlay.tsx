@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { X, Plus, ChevronDown, Check } from "lucide-react";
+import { useRef, useState } from "react";
+import { X, Plus, ChevronDown, Check, Delete } from "lucide-react";
 import {
   CURRENCY,
+  formatMoney,
   addCategory,
   nextPaletteColor,
   type Category,
 } from "@/lib/categories";
 import { addExpense, updateExpense, type Expense } from "@/lib/expenses";
+import { evalExpression } from "@/lib/calc";
 
 const NEW = "__new__";
 
@@ -43,6 +45,43 @@ export default function AddExpenseOverlay({
   const [saving, setSaving] = useState(false);
 
   const selectedCat = categories.find((c) => c.name === category);
+  const amountRef = useRef<HTMLInputElement>(null);
+  const computed = evalExpression(amount);
+  const hasExpr = /[+\-*/()]/.test(amount);
+
+  // Insert an operator at the cursor (so the native number keypad still works).
+  function insert(sym: string) {
+    const el = amountRef.current;
+    const start = el?.selectionStart ?? amount.length;
+    const end = el?.selectionEnd ?? amount.length;
+    const next = amount.slice(0, start) + sym + amount.slice(end);
+    setAmount(next);
+    requestAnimationFrame(() => {
+      el?.focus();
+      const pos = start + sym.length;
+      el?.setSelectionRange(pos, pos);
+    });
+  }
+
+  function backspace() {
+    const el = amountRef.current;
+    const start = el?.selectionStart ?? amount.length;
+    const end = el?.selectionEnd ?? amount.length;
+    if (start === end) {
+      if (start === 0) return;
+      setAmount(amount.slice(0, start - 1) + amount.slice(end));
+      requestAnimationFrame(() => {
+        el?.focus();
+        el?.setSelectionRange(start - 1, start - 1);
+      });
+    } else {
+      setAmount(amount.slice(0, start) + amount.slice(end));
+      requestAnimationFrame(() => {
+        el?.focus();
+        el?.setSelectionRange(start, start);
+      });
+    }
+  }
 
   async function handleCreateCategory() {
     const name = newName.trim();
@@ -69,8 +108,13 @@ export default function AddExpenseOverlay({
     e.preventDefault();
     setError(null);
 
-    const value = parseFloat(amount);
-    if (!Number.isFinite(value) || value <= 0) {
+    const evaluated = evalExpression(amount);
+    if (evaluated === null) {
+      setError("That amount isn't a valid number or calculation.");
+      return;
+    }
+    const value = Math.round(evaluated * 100) / 100;
+    if (!(value > 0)) {
       setError("Enter an amount greater than 0.");
       return;
     }
@@ -132,14 +176,59 @@ export default function AddExpenseOverlay({
               <span className="text-2xl font-bold text-text-muted">{CURRENCY}</span>
               <input
                 id="amount"
+                ref={amountRef}
                 inputMode="decimal"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) =>
+                  setAmount(e.target.value.replace(/[^0-9+\-*/.() ]/g, ""))
+                }
                 placeholder="0"
                 autoFocus={!editing}
                 className="w-full bg-transparent py-3 pl-2 text-2xl font-bold text-text-dark outline-none"
               />
             </div>
+
+            {/* Calculator buttons */}
+            <div className="grid grid-cols-7 gap-1.5">
+              {[
+                { label: "(", val: "(" },
+                { label: ")", val: ")" },
+                { label: "÷", val: "/" },
+                { label: "×", val: "*" },
+                { label: "−", val: "-" },
+                { label: "+", val: "+" },
+              ].map((b) => (
+                <button
+                  key={b.val}
+                  type="button"
+                  onClick={() => insert(b.val)}
+                  className="flex h-10 items-center justify-center rounded-[12px] bg-bg-light text-lg font-semibold text-text-dark transition hover:bg-border active:scale-95"
+                >
+                  {b.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={backspace}
+                aria-label="Delete"
+                className="flex h-10 items-center justify-center rounded-[12px] bg-bg-light text-text-mid transition hover:bg-border active:scale-95"
+              >
+                <Delete size={18} />
+              </button>
+            </div>
+
+            {/* Live result of the calculation */}
+            {hasExpr && (
+              <p
+                className={`text-sm font-semibold ${
+                  computed === null ? "text-text-muted" : "text-teal"
+                }`}
+              >
+                {computed === null
+                  ? "Incomplete calculation…"
+                  : `= ${formatMoney(Math.round(computed * 100) / 100)}`}
+              </p>
+            )}
           </div>
 
           {/* Category dropdown (custom) */}
